@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <Version>1.0.0</Version>
+        <Authors>Samuel Lucas</Authors>
+        <Description>Key-committing ChaCha20-Poly1305.</Description>
+        <Copyright>Copyright (c) 2022 Samuel Lucas</Copyright>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/samuel-lucas6/cChaCha20-Poly1305</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/samuel-lucas6/cChaCha20-Poly1305</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageTags>chacha20poly1305 chacha20 poly1305 ietf key-committing</PackageTags>
+        <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Geralt" Version="1.2.0" />
+    </ItemGroup>
+
+</Project>
