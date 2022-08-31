@@ -1,8 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cChaCha20Poly1305", "cChaCha20Poly1305\cChaCha20Poly1305.csproj", "{D629EB13-A40D-43C0-99FB-B21774309ED7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kcAEAD", "kcAEAD\kcAEAD.csproj", "{D629EB13-A40D-43C0-99FB-B21774309ED7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cChaCha20Poly1305Tests", "cChaCha20Poly1305Tests\cChaCha20Poly1305Tests.csproj", "{88DEC9C3-742B-4898-9B6B-0AA1FE6C0C0B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kcAEADTests", "kcAEADTests\kcAEADTests.csproj", "{88DEC9C3-742B-4898-9B6B-0AA1FE6C0C0B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

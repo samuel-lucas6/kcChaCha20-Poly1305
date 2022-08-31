@@ -1,6 +1,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/samuel-lucas6/cChaCha20-Poly1305/blob/main/LICENSE)
 
-# cChaCha20-Poly1305
+# kcChaCha20-Poly1305
 
 A key-committing implementation of [ChaCha20-Poly1305](https://datatracker.ietf.org/doc/html/rfc8439).
 

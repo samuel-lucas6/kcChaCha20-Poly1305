@@ -1,5 +1,5 @@
 ﻿/*
-    cChaCha20Poly1305: Key-committing ChaCha20-Poly1305.
+    kcChaCha20Poly1305: Key-committing ChaCha20-Poly1305.
     Copyright (c) 2022 Samuel Lucas
     
     Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -25,9 +25,9 @@ using System.Buffers.Binary;
 using System.Security.Cryptography;
 using Geralt;
 
-namespace cChaCha20Poly1305;
+namespace kcAEAD;
 
-public static class ChaCha20Poly1305
+public static class kcChaCha20Poly1305
 {
     public const int KeySize = ChaCha20.KeySize;
     public const int NonceSize = ChaCha20.NonceSize;
@@ -87,6 +87,7 @@ public static class ChaCha20Poly1305
     {
         Span<byte> padding1 = stackalloc byte[Align(associatedData.Length, AlignSize)];
         Span<byte> padding2 = stackalloc byte[Align(ciphertext.Length, AlignSize)];
+        padding1.Clear(); padding2.Clear();
         
         Span<byte> associatedDataLength = stackalloc byte[UInt64BytesLength], ciphertextLength = stackalloc byte[UInt64BytesLength];
         BinaryPrimitives.WriteUInt64LittleEndian(associatedDataLength, (ulong)associatedData.Length);

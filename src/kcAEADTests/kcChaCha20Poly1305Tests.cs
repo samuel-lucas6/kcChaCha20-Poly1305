@@ -2,12 +2,13 @@ using System;
 using System.Linq;
 using System.Security.Cryptography;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ChaCha20Poly1305 = cChaCha20Poly1305.ChaCha20Poly1305;
+using ChaCha20Poly1305 = Geralt.ChaCha20Poly1305;
+using kcAEAD;
 
-namespace cChaCha20Poly1305Tests;
+namespace kcAEADTests;
 
 [TestClass]
-public class ChaCha20Poly1305Tests
+public class kcChaCha20Poly1305Tests
 {
     // https://datatracker.ietf.org/doc/html/rfc8439#section-2.8.2
     [TestMethod]
@@ -19,13 +20,13 @@ public class ChaCha20Poly1305Tests
         Span<byte> key = Convert.FromHexString("808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9f");
         Span<byte> associatedData = Convert.FromHexString("50515253c0c1c2c3c4c5c6c7");
         
-        Span<byte> encrypted = new byte[ChaCha20Poly1305.CommitmentSize + ciphertext.Length];
-        ChaCha20Poly1305.Encrypt(encrypted, plaintext, nonce, key, associatedData);
-        Assert.IsTrue(encrypted[ChaCha20Poly1305.CommitmentSize..].SequenceEqual(ciphertext));
-        Assert.IsFalse(encrypted[..ChaCha20Poly1305.CommitmentSize].SequenceEqual(new byte[ChaCha20Poly1305.CommitmentSize]));
+        Span<byte> encrypted = new byte[kcChaCha20Poly1305.CommitmentSize + ciphertext.Length];
+        kcChaCha20Poly1305.Encrypt(encrypted, plaintext, nonce, key, associatedData);
+        Assert.IsTrue(encrypted[kcChaCha20Poly1305.CommitmentSize..].SequenceEqual(ciphertext));
+        Assert.IsFalse(encrypted[..kcChaCha20Poly1305.CommitmentSize].SequenceEqual(new byte[kcChaCha20Poly1305.CommitmentSize]));
         
         Span<byte> decrypted = new byte[plaintext.Length];
-        ChaCha20Poly1305.Decrypt(decrypted, encrypted, nonce, key, associatedData);
+        kcChaCha20Poly1305.Decrypt(decrypted, encrypted, nonce, key, associatedData);
         Assert.IsTrue(decrypted.SequenceEqual(plaintext));
     }
     
@@ -40,11 +41,11 @@ public class ChaCha20Poly1305Tests
         Span<byte> associatedData = Convert.FromHexString("f33388860000000000004e91");
         
         Span<byte> decrypted = stackalloc byte[plaintext.Length];
-        ChaCha20Poly1305.Decrypt(decrypted, ciphertext, nonce, key, associatedData);
+        kcChaCha20Poly1305.Decrypt(decrypted, ciphertext, nonce, key, associatedData);
         Assert.IsTrue(decrypted.SequenceEqual(plaintext));
         
         Span<byte> encrypted = stackalloc byte[ciphertext.Length];
-        ChaCha20Poly1305.Encrypt(encrypted, plaintext, nonce, key, associatedData);
+        kcChaCha20Poly1305.Encrypt(encrypted, plaintext, nonce, key, associatedData);
         Assert.IsTrue(encrypted.SequenceEqual(ciphertext));
     }
     
@@ -60,28 +61,28 @@ public class ChaCha20Poly1305Tests
         
         var wrongCommitment = ciphertext.ToArray();
         wrongCommitment[0]++;
-        Assert.ThrowsException<CryptographicException>(() => ChaCha20Poly1305.Decrypt(decrypted, wrongCommitment, nonce, key, associatedData));
+        Assert.ThrowsException<CryptographicException>(() => kcChaCha20Poly1305.Decrypt(decrypted, wrongCommitment, nonce, key, associatedData));
         
         var wrongTag = ciphertext.ToArray();
         wrongTag[^1]++;
-        Assert.ThrowsException<CryptographicException>(() => ChaCha20Poly1305.Decrypt(decrypted, wrongTag, nonce, key, associatedData));
+        Assert.ThrowsException<CryptographicException>(() => kcChaCha20Poly1305.Decrypt(decrypted, wrongTag, nonce, key, associatedData));
         
         var wrongCiphertext = ciphertext.ToArray();
-        wrongCiphertext[ChaCha20Poly1305.CommitmentSize + 1]++;
-        Assert.ThrowsException<CryptographicException>(() => ChaCha20Poly1305.Decrypt(decrypted, wrongCiphertext, nonce, key, associatedData));
+        wrongCiphertext[kcChaCha20Poly1305.CommitmentSize + 1]++;
+        Assert.ThrowsException<CryptographicException>(() => kcChaCha20Poly1305.Decrypt(decrypted, wrongCiphertext, nonce, key, associatedData));
         
         var wrongNonce = nonce.ToArray();
         wrongNonce[0]++;
-        Assert.ThrowsException<CryptographicException>(() => ChaCha20Poly1305.Decrypt(decrypted, ciphertext, wrongNonce, key, associatedData));
+        Assert.ThrowsException<CryptographicException>(() => kcChaCha20Poly1305.Decrypt(decrypted, ciphertext, wrongNonce, key, associatedData));
         
         var wrongKey = key.ToArray();
         wrongKey[0]++;
-        Assert.ThrowsException<CryptographicException>(() => ChaCha20Poly1305.Decrypt(decrypted, ciphertext, nonce, wrongKey, associatedData));
+        Assert.ThrowsException<CryptographicException>(() => kcChaCha20Poly1305.Decrypt(decrypted, ciphertext, nonce, wrongKey, associatedData));
         
         var wrongAssociatedData = associatedData.ToArray();
         wrongAssociatedData[0]++;
-        Assert.ThrowsException<CryptographicException>(() => ChaCha20Poly1305.Decrypt(decrypted, ciphertext, nonce, key, wrongAssociatedData));
-        Assert.ThrowsException<CryptographicException>(() => ChaCha20Poly1305.Decrypt(decrypted, ciphertext, nonce, key));
+        Assert.ThrowsException<CryptographicException>(() => kcChaCha20Poly1305.Decrypt(decrypted, ciphertext, nonce, key, wrongAssociatedData));
+        Assert.ThrowsException<CryptographicException>(() => kcChaCha20Poly1305.Decrypt(decrypted, ciphertext, nonce, key));
     }
     
     // Against libsodium
@@ -89,19 +90,19 @@ public class ChaCha20Poly1305Tests
     public void NoPlaintextOrAssociatedData()
     {
         Span<byte> plaintext = Span<byte>.Empty;
-        Span<byte> nonce = stackalloc byte[ChaCha20Poly1305.NonceSize];
-        Span<byte> key = stackalloc byte[ChaCha20Poly1305.KeySize];
+        Span<byte> nonce = stackalloc byte[kcChaCha20Poly1305.NonceSize];
+        Span<byte> key = stackalloc byte[kcChaCha20Poly1305.KeySize];
         Span<byte> associatedData = Span<byte>.Empty;
         
-        Span<byte> ciphertext = stackalloc byte[plaintext.Length + ChaCha20Poly1305.TagSize];
-        Geralt.ChaCha20Poly1305.Encrypt(ciphertext, plaintext, nonce, key, associatedData);
+        Span<byte> ciphertext = stackalloc byte[plaintext.Length + kcChaCha20Poly1305.TagSize];
+        ChaCha20Poly1305.Encrypt(ciphertext, plaintext, nonce, key, associatedData);
         
-        Span<byte> encrypted = stackalloc byte[ChaCha20Poly1305.CommitmentSize + ciphertext.Length];
-        ChaCha20Poly1305.Encrypt(encrypted, plaintext, nonce, key, associatedData);
-        Assert.IsTrue(encrypted[ChaCha20Poly1305.CommitmentSize..].SequenceEqual(ciphertext));
+        Span<byte> encrypted = stackalloc byte[kcChaCha20Poly1305.CommitmentSize + ciphertext.Length];
+        kcChaCha20Poly1305.Encrypt(encrypted, plaintext, nonce, key, associatedData);
+        Assert.IsTrue(encrypted[kcChaCha20Poly1305.CommitmentSize..].SequenceEqual(ciphertext));
         
         Span<byte> decrypted = stackalloc byte[plaintext.Length];
-        ChaCha20Poly1305.Decrypt(decrypted, encrypted, nonce, key, associatedData);
+        kcChaCha20Poly1305.Decrypt(decrypted, encrypted, nonce, key, associatedData);
         Assert.IsTrue(decrypted.SequenceEqual(plaintext));
     }
     
@@ -109,38 +110,38 @@ public class ChaCha20Poly1305Tests
     public void OnlyAssociatedData()
     {
         Span<byte> plaintext = Span<byte>.Empty;
-        Span<byte> nonce = stackalloc byte[ChaCha20Poly1305.NonceSize];
-        Span<byte> key = stackalloc byte[ChaCha20Poly1305.KeySize];
-        Span<byte> associatedData = stackalloc byte[ChaCha20Poly1305.CommitmentSize];
+        Span<byte> nonce = stackalloc byte[kcChaCha20Poly1305.NonceSize];
+        Span<byte> key = stackalloc byte[kcChaCha20Poly1305.KeySize];
+        Span<byte> associatedData = stackalloc byte[kcChaCha20Poly1305.CommitmentSize];
         
-        Span<byte> ciphertext = stackalloc byte[plaintext.Length + ChaCha20Poly1305.TagSize];
-        Geralt.ChaCha20Poly1305.Encrypt(ciphertext, plaintext, nonce, key, associatedData);
+        Span<byte> ciphertext = stackalloc byte[plaintext.Length + kcChaCha20Poly1305.TagSize];
+        ChaCha20Poly1305.Encrypt(ciphertext, plaintext, nonce, key, associatedData);
         
-        Span<byte> encrypted = stackalloc byte[ChaCha20Poly1305.CommitmentSize + ciphertext.Length];
-        ChaCha20Poly1305.Encrypt(encrypted, plaintext, nonce, key, associatedData);
-        Assert.IsTrue(encrypted[ChaCha20Poly1305.CommitmentSize..].SequenceEqual(ciphertext));
+        Span<byte> encrypted = stackalloc byte[kcChaCha20Poly1305.CommitmentSize + ciphertext.Length];
+        kcChaCha20Poly1305.Encrypt(encrypted, plaintext, nonce, key, associatedData);
+        Assert.IsTrue(encrypted[kcChaCha20Poly1305.CommitmentSize..].SequenceEqual(ciphertext));
         
         Span<byte> decrypted = stackalloc byte[plaintext.Length];
-        ChaCha20Poly1305.Decrypt(decrypted, encrypted, nonce, key, associatedData);
+        kcChaCha20Poly1305.Decrypt(decrypted, encrypted, nonce, key, associatedData);
         Assert.IsTrue(decrypted.SequenceEqual(plaintext));
     }
     
     [TestMethod]
     public void OnlyPlaintext()
     {
-        Span<byte> plaintext = stackalloc byte[ChaCha20Poly1305.CommitmentSize];
-        Span<byte> nonce = stackalloc byte[ChaCha20Poly1305.NonceSize];
-        Span<byte> key = stackalloc byte[ChaCha20Poly1305.KeySize];
+        Span<byte> plaintext = stackalloc byte[kcChaCha20Poly1305.CommitmentSize];
+        Span<byte> nonce = stackalloc byte[kcChaCha20Poly1305.NonceSize];
+        Span<byte> key = stackalloc byte[kcChaCha20Poly1305.KeySize];
         
-        Span<byte> ciphertext = stackalloc byte[plaintext.Length + ChaCha20Poly1305.TagSize];
-        Geralt.ChaCha20Poly1305.Encrypt(ciphertext, plaintext, nonce, key);
+        Span<byte> ciphertext = stackalloc byte[plaintext.Length + kcChaCha20Poly1305.TagSize];
+        ChaCha20Poly1305.Encrypt(ciphertext, plaintext, nonce, key);
         
-        Span<byte> encrypted = stackalloc byte[ChaCha20Poly1305.CommitmentSize + ciphertext.Length];
-        ChaCha20Poly1305.Encrypt(encrypted, plaintext, nonce, key);
-        Assert.IsTrue(encrypted[ChaCha20Poly1305.CommitmentSize..].SequenceEqual(ciphertext));
+        Span<byte> encrypted = stackalloc byte[kcChaCha20Poly1305.CommitmentSize + ciphertext.Length];
+        kcChaCha20Poly1305.Encrypt(encrypted, plaintext, nonce, key);
+        Assert.IsTrue(encrypted[kcChaCha20Poly1305.CommitmentSize..].SequenceEqual(ciphertext));
         
         Span<byte> decrypted = stackalloc byte[plaintext.Length];
-        ChaCha20Poly1305.Decrypt(decrypted, encrypted, nonce, key);
+        kcChaCha20Poly1305.Decrypt(decrypted, encrypted, nonce, key);
         Assert.IsTrue(decrypted.SequenceEqual(plaintext));
     }
 }
