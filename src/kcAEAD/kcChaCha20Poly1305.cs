@@ -92,11 +92,15 @@ public static class kcChaCha20Poly1305
         Span<byte> associatedDataLength = stackalloc byte[UInt64BytesLength], ciphertextLength = stackalloc byte[UInt64BytesLength];
         BinaryPrimitives.WriteUInt64LittleEndian(associatedDataLength, (ulong)associatedData.Length);
         BinaryPrimitives.WriteUInt64LittleEndian(ciphertextLength, (ulong)ciphertext.Length);
-        
-        Span<byte> message = new byte[associatedData.Length + padding1.Length + ciphertext.Length + padding2.Length + associatedDataLength.Length + ciphertextLength.Length];
-        Spans.Concat(message, associatedData, padding1, ciphertext, padding2, associatedDataLength, ciphertextLength);
-        
-        Poly1305.ComputeTag(tag, message, macKey);
+
+        using var poly1305 = new IncrementalPoly1305(macKey);
+        poly1305.Update(associatedData);
+        poly1305.Update(padding1);
+        poly1305.Update(ciphertext);
+        poly1305.Update(padding2);
+        poly1305.Update(associatedDataLength);
+        poly1305.Update(ciphertextLength);
+        poly1305.Finalize(tag);
     }
     
     private static int Align(int x, int pow2)
