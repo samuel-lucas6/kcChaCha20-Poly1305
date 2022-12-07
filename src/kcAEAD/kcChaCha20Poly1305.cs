@@ -39,8 +39,8 @@ public static class kcChaCha20Poly1305
     
     public static void Encrypt(Span<byte> ciphertext, ReadOnlySpan<byte> plaintext, ReadOnlySpan<byte> nonce, ReadOnlySpan<byte> key, ReadOnlySpan<byte> associatedData = default)
     {
-        if (ciphertext.Length != CommitmentSize + plaintext.Length + Poly1305.TagSize) { throw new ArgumentOutOfRangeException(nameof(ciphertext), ciphertext.Length, $"{nameof(ciphertext)} must be {CommitmentSize + plaintext.Length + Poly1305.TagSize} bytes long."); }
-        
+        Validation.EqualToSize(nameof(ciphertext), ciphertext.Length, CommitmentSize + plaintext.Length + Poly1305.TagSize);
+
         Span<byte> block0 = stackalloc byte[ChaCha20.BlockSize];
         ChaCha20.Fill(block0, nonce, key);
         Span<byte> macKey = block0[..Poly1305.KeySize];
@@ -56,9 +56,9 @@ public static class kcChaCha20Poly1305
 
     public static void Decrypt(Span<byte> plaintext, ReadOnlySpan<byte> ciphertext, ReadOnlySpan<byte> nonce, ReadOnlySpan<byte> key, ReadOnlySpan<byte> associatedData = default)
     {
-        if (ciphertext.Length < CommitmentSize + Poly1305.TagSize) { throw new ArgumentOutOfRangeException(nameof(ciphertext), ciphertext.Length, $"{nameof(ciphertext)} must be at least {CommitmentSize + Poly1305.TagSize} bytes long."); }
-        if (plaintext.Length != ciphertext.Length - Poly1305.TagSize - CommitmentSize) { throw new ArgumentOutOfRangeException(nameof(plaintext), plaintext.Length, $"{nameof(plaintext)} must be {ciphertext.Length - Poly1305.TagSize - CommitmentSize} bytes long."); }
-        
+        Validation.NotLessThanMin(nameof(ciphertext), ciphertext.Length, CommitmentSize + Poly1305.TagSize);
+        Validation.EqualToSize(nameof(plaintext), plaintext.Length, ciphertext.Length - Poly1305.TagSize - CommitmentSize);
+
         Span<byte> block0 = stackalloc byte[ChaCha20.BlockSize];
         ChaCha20.Fill(block0, nonce, key);
         Span<byte> macKey = block0[..Poly1305.KeySize];
